@@ -2,12 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Management.Automation;
 using PuppeteerSharp;
+using PowerBrowser.Models;
 
 namespace PowerBrowser.Cmdlets
 {
     [Cmdlet(VerbsCommon.Set, "BrowserElementText")]
     [OutputType(typeof(PowerBrowserElement))]
-    public class TypeBrowserElementCommand : BrowserCmdletBase
+    public class SetBrowserElementTextCommand : BrowserCmdletBase
     {
         [Parameter(
             Position = 0,

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Management.Automation;
 using System.Text.RegularExpressions;
 using PuppeteerSharp;
+using PowerBrowser.Models;
 
 namespace PowerBrowser.Cmdlets
 {
