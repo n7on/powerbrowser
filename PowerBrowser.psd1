@@ -1,27 +1,29 @@
 @{
-    RootModule = 'PowerBrowser.dll'
+    RootModule = 'bin/Debug/netstandard2.0/PowerBrowser.dll'
     ModuleVersion = '1.0.0'
     GUID = '17b431d1-d9da-44e6-b740-8ad3bfb4c0cf'
     Author = 'Anton Lindström'
     CompanyName = 'Anton Lindström'
     Copyright = '(c) 2025 Anton Lindström. All rights reserved.'
-    Description = 'PowerShell module for browser automation powered by PuppeteerSharp'
+    Description = 'PowerShell module for browser automation powered by PuppeteerSharp. Install browsers, start/stop them, create/manage pages, and automate web interactions.'
     
     PowerShellVersion = '5.1'
-    DotNetFrameworkVersion = '4.7.2'
+    DotNetFrameworkVersion = '4.6.1'
     
     FunctionsToExport = @()
     CmdletsToExport = @(
         'Install-Browser',
+        'Uninstall-Browser',
+        'Get-Browser',
         'Start-Browser',
         'Stop-Browser',
         'New-BrowserPage',
-        'Enter-BrowserUrl',
-        'Get-BrowserScreenshot',
+        'Get-BrowserPage',
+        'Remove-BrowserPage',
         'Find-BrowserElement',
-        'Invoke-BrowserClick',
-        'Set-BrowserInput',
-        'Get-BrowserContent'
+        'Invoke-BrowserElementClick',
+        'Set-BrowserElementText',
+        'Get-BrowserElementAttribute'
     )
     VariablesToExport = @()
     AliasesToExport = @('Navigate-Browser', 'Export-BrowserScreenshot')

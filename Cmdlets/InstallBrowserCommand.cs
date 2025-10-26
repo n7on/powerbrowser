@@ -8,50 +8,37 @@ namespace PowerBrowser.Cmdlets
 {
     [Cmdlet(VerbsLifecycle.Install, "Browser")]
     [OutputType(typeof(string))]
-    public class InstallBrowserCommand : PSCmdlet
+    public class InstallBrowserCommand : BrowserCmdletBase
     {
-        [Parameter(HelpMessage = "Browser revision to download")]
-        public string? Revision { get; set; }
-
-        [Parameter(HelpMessage = "Custom path where browsers should be downloaded")]
-        public string? BrowserPath { get; set; }
+        [Parameter(
+            Position = 0,
+            HelpMessage = "Browser type to install (Chrome, Firefox, or Chromium - use -Headless flag with Start-Browser instead of ChromeHeadlessShell)")]
+        public SupportedBrowser BrowserType { get; set; } = SupportedBrowser.Chrome;
 
         protected override void ProcessRecord()
         {
             try
             {
-                // Use custom path if provided, otherwise use user-specific directory
-                string browserPath;
-                if (!string.IsNullOrEmpty(BrowserPath))
+                EnsureBrowserStorageExists();
+                
+                // Use simple browser type name
+                var browserName = BrowserType.ToString();
+                var namedBrowserPath = GetNamedBrowserPath(browserName);
+                
+                // Check if browser is already installed
+                if (Directory.Exists(namedBrowserPath))
                 {
-                    browserPath = BrowserPath;
-                }
-                else
-                {
-                    var userDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-                    browserPath = Path.Combine(userDataPath, "PowerBrowser", "Browsers");
-                    
-                    // Debug: Show what path we're using
-                    WriteVerbose($"UserDataPath: {userDataPath}");
-                    WriteVerbose($"Computed browser path: {browserPath}");
+                    WriteObject($"✅ Browser '{browserName}' is already installed!");
+                    WriteObject($"📍 Type: {BrowserType}");
+                    WriteObject($"📁 Location: {namedBrowserPath}");
+                    return;
                 }
                 
-                // Ensure the directory exists
-                Directory.CreateDirectory(browserPath);
+                var result = DownloadBrowserSync(browserName);
                 
-                // Show progress before starting download
-                var progress = new ProgressRecord(0, "Downloading Browser", 
-                    $"Downloading Chromium browser to: {browserPath}");
-                WriteProgress(progress);
-                
-                // Perform the download synchronously
-                var result = DownloadBrowserSync(browserPath);
-                
-                // Complete the progress
-                progress.RecordType = ProgressRecordType.Completed;
-                WriteProgress(progress);
-                
-                WriteObject($"Browser installed successfully at: {result}");
+                WriteObject($"✅ Browser '{browserName}' installed successfully!");
+                WriteObject($"📍 Type: {BrowserType}");
+                WriteObject($"📁 Location: {result}");
             }
             catch (Exception ex)
             {
@@ -59,19 +46,26 @@ namespace PowerBrowser.Cmdlets
             }
         }
 
-        private string DownloadBrowserSync(string browserPath)
+        private string DownloadBrowserSync(string browserName)
         {
+            var namedBrowserPath = GetNamedBrowserPath(browserName);
+            Directory.CreateDirectory(namedBrowserPath);
+            
             var browserFetcher = new BrowserFetcher(new BrowserFetcherOptions
             {
-                Path = browserPath
+                Path = namedBrowserPath,
+                Browser = BrowserType
             });
 
-            var downloadTask = string.IsNullOrEmpty(Revision)
-                ? browserFetcher.DownloadAsync()
-                : browserFetcher.DownloadAsync(Revision);
-            
-            // Wait for the download to complete synchronously
+            // Show download status with simple messages
+            WriteObject($"🔄 Downloading {BrowserType}... This may take a few minutes depending on your connection.");
+            WriteVerbose($"Download path: {namedBrowserPath}");
+
+            // Download the latest stable version
+            var downloadTask = browserFetcher.DownloadAsync();
             var revisionInfo = downloadTask.GetAwaiter().GetResult();
+            
+            WriteObject($"✅ Download completed!");
             
             return revisionInfo.GetExecutablePath();
         }
