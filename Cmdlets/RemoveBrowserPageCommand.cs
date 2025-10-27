@@ -4,6 +4,7 @@ using System.Linq;
 using System.Management.Automation;
 using PuppeteerSharp;
 using PowerBrowser.Models;
+using PowerBrowser.Exceptions;
 
 namespace PowerBrowser.Cmdlets
 {
@@ -33,10 +34,7 @@ namespace PowerBrowser.Cmdlets
                 // Resolve page instance from various input sources
                 var (pageInstance, pageId, actualPageName) = ResolvePageInstance();
                 
-                if (pageInstance == null)
-                {
-                    return; // Error already written in ResolvePageInstance
-                }
+                // No null check needed - if ResolvePageInstance returns, values are guaranteed valid
 
                 var page = pageInstance;
 
@@ -70,6 +68,11 @@ namespace PowerBrowser.Cmdlets
 
                 WriteObject($"✅ Page '{actualPageName}' closed successfully!");
             }
+            catch (PowerBrowserException ex)
+            {
+                // Handle custom PowerBrowser exceptions with their built-in error information
+                WriteError(new ErrorRecord(ex, ex.ErrorId, ex.Category, null));
+            }
             catch (Exception ex)
             {
                 WriteError(new ErrorRecord(ex, "RemoveBrowserPageFailed", ErrorCategory.OperationStopped, null));
@@ -84,10 +87,7 @@ namespace PowerBrowser.Cmdlets
 
             if (pageInstances == null)
             {
-                WriteError(new ErrorRecord(
-                    new InvalidOperationException("No pages are currently open."),
-                    "NoPagesOpen", ErrorCategory.ObjectNotFound, null));
-                return (null, null, null);
+                throw new ResourceUnavailableException("No pages are currently open.");
             }
 
             // Handle PowerShell PSObject wrapping
@@ -108,20 +108,14 @@ namespace PowerBrowser.Cmdlets
             
             if (string.IsNullOrEmpty(pageIdentifier))
             {
-                WriteError(new ErrorRecord(
-                    new InvalidOperationException("Page identifier must be specified either through -Page or -PageId parameter, or by piping a PowerBrowserPage object."),
-                    "PageIdRequired", ErrorCategory.InvalidArgument, null));
-                return (null, null, null);
+                throw new RequiredParameterException("Page identifier is required to remove a specific page.");
             }
 
             // Try to find the page by exact ID first, then by partial match (page name)
             var matchingPageId = FindMatchingPageId(pageInstances, pageIdentifier);
             if (string.IsNullOrEmpty(matchingPageId))
             {
-                WriteError(new ErrorRecord(
-                    new InvalidOperationException($"Page '{pageIdentifier}' not found or already closed."),
-                    "PageNotFound", ErrorCategory.ObjectNotFound, pageIdentifier));
-                return (null, null, null);
+                throw new ResourceNotFoundException($"Page '{pageIdentifier}' not found.");
             }
 
             var page = pageInstances[matchingPageId];

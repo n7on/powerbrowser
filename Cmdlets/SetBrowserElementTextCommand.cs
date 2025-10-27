@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Management.Automation;
 using PuppeteerSharp;
 using PowerBrowser.Models;
+using PowerBrowser.Exceptions;
 
 namespace PowerBrowser.Cmdlets
 {
@@ -51,10 +52,7 @@ namespace PowerBrowser.Cmdlets
                 // Resolve element instance from various input sources
                 var powerElement = ResolveElementInstance();
                 
-                if (powerElement == null)
-                {
-                    return; // Error already written in ResolveElementInstance
-                }
+                // No null check needed - if ResolveElementInstance returns, value is guaranteed valid
 
                 WriteVerbose($"⌨️ Typing '{Text}' into element '{powerElement}' on page '{powerElement.PageName}'...");
 
@@ -64,6 +62,11 @@ namespace PowerBrowser.Cmdlets
 
                 // Return the same element for continued chaining
                 WriteObject(powerElement);
+            }
+            catch (PowerBrowserException ex)
+            {
+                // Handle custom PowerBrowser exceptions with their built-in error information
+                WriteError(new ErrorRecord(ex, ex.ErrorId, ex.Category, null));
             }
             catch (Exception ex)
             {
@@ -78,10 +81,7 @@ namespace PowerBrowser.Cmdlets
 
             if (elementInstances == null)
             {
-                WriteError(new ErrorRecord(
-                    new InvalidOperationException("No browser elements are available. Use Find-BrowserElement first."),
-                    "NoElementsAvailable", ErrorCategory.ObjectNotFound, null));
-                return null;
+                throw new ResourceUnavailableException("No elements are currently available.");
             }
 
             // Handle PowerShell PSObject wrapping
@@ -102,18 +102,12 @@ namespace PowerBrowser.Cmdlets
             
             if (string.IsNullOrEmpty(elementId))
             {
-                WriteError(new ErrorRecord(
-                    new InvalidOperationException("Element ID must be specified either through -Element or -ElementId parameter, or by piping a PowerBrowserElement object."),
-                    "ElementIdRequired", ErrorCategory.InvalidArgument, null));
-                return null;
+                throw new RequiredParameterException("Element ID is required to set element text.");
             }
 
             if (!elementInstances.ContainsKey(elementId))
             {
-                WriteError(new ErrorRecord(
-                    new InvalidOperationException($"Element '{elementId}' not found. Use Find-BrowserElement first."),
-                    "ElementNotFound", ErrorCategory.ObjectNotFound, elementId));
-                return null;
+                throw new ResourceNotFoundException($"Element '{elementId}' not found.");
             }
 
             return elementInstances[elementId];

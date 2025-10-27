@@ -9,7 +9,7 @@ using PowerBrowser.Models;
 namespace PowerBrowser.Cmdlets
 {
     [Cmdlet(VerbsCommon.Get, "Browser")]
-    [OutputType(typeof(PSObject))]
+    [OutputType(typeof(PowerBrowserInstance))]
     public class GetBrowserCommand : BrowserCmdletBase
     {
         protected override void ProcessRecord()
@@ -20,18 +20,17 @@ namespace PowerBrowser.Cmdlets
                 
                 if (!installedBrowsers.Any())
                 {
-                    WriteObject("No browsers are currently installed.");
-                    WriteObject("Use 'Install-Browser -BrowserType <Type>' to install a browser.");
+                    WriteVerbose("No browsers are currently installed.");
+                    WriteVerbose("Use 'Install-Browser -BrowserType <Type>' to install a browser.");
                     return;
                 }
 
-                WriteObject($"📋 Installed browsers ({installedBrowsers.Length}):");
-                WriteObject("");
+                WriteVerbose($"📋 Installed browsers ({installedBrowsers.Length}):");
+                WriteVerbose("");
 
                 foreach (var browserName in installedBrowsers)
                 {
                     var browserPath = GetNamedBrowserPath(browserName);
-                    var browserInfo = new PSObject();
                     
                     // Get size information
                     var sizeInfo = GetDirectorySize(browserPath);
@@ -39,15 +38,29 @@ namespace PowerBrowser.Cmdlets
                     // Check if browser is running
                     var runningStatus = GetBrowserRunningStatus(browserName);
                     
-                    browserInfo.Properties.Add(new PSNoteProperty("Name", browserName));
-                    browserInfo.Properties.Add(new PSNoteProperty("Type", browserName)); // Same as name now
-                    browserInfo.Properties.Add(new PSNoteProperty("Size", sizeInfo));
-                    browserInfo.Properties.Add(new PSNoteProperty("Running", runningStatus.IsRunning));
-                    browserInfo.Properties.Add(new PSNoteProperty("ProcessId", runningStatus.ProcessId));
-                    browserInfo.Properties.Add(new PSNoteProperty("PageCount", runningStatus.PageCount));
-                    browserInfo.Properties.Add(new PSNoteProperty("Path", browserPath));
+                    // Get the actual browser instance if it's running
+                    IBrowser actualBrowser = null;
+                    var sessionStore = SessionState.PSVariable;
+                    var browserInstances = sessionStore.GetValue("PowerBrowserInstances") as Dictionary<string, IBrowser>;
                     
-                    WriteObject(browserInfo);
+                    if (browserInstances != null && browserInstances.ContainsKey(browserName))
+                    {
+                        actualBrowser = browserInstances[browserName];
+                    }
+                    
+                    // Create PowerBrowserInstance object
+                    var browserInstance = new PowerBrowserInstance(
+                        browserName, 
+                        actualBrowser,
+                        false, // headless - we don't know this from Get-Browser
+                        "Unknown" // windowSize - we don't know this from Get-Browser
+                    );
+                    
+                    // Set additional properties for Get-Browser display
+                    browserInstance.Size = sizeInfo;
+                    browserInstance.Path = browserPath;
+                    
+                    WriteObject(browserInstance);
                 }
             }
             catch (Exception ex)

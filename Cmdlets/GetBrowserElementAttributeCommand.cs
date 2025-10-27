@@ -4,6 +4,7 @@ using System.Linq;
 using System.Management.Automation;
 using PuppeteerSharp;
 using PowerBrowser.Models;
+using PowerBrowser.Exceptions;
 
 namespace PowerBrowser.Cmdlets
 {
@@ -47,10 +48,7 @@ namespace PowerBrowser.Cmdlets
                 // Resolve element instance from various input sources
                 var powerElement = ResolveElementInstance();
                 
-                if (powerElement == null)
-                {
-                    return; // Error already written in ResolveElementInstance
-                }
+                // No null check needed - if ResolveElementInstance returns, value is guaranteed valid
 
                 WriteVerbose($"📋 Getting attributes/properties for element '{powerElement}' on page '{powerElement.PageName}'...");
 
@@ -60,6 +58,11 @@ namespace PowerBrowser.Cmdlets
 
                 // Return the information object
                 WriteObject(result);
+            }
+            catch (PowerBrowserException ex)
+            {
+                // Handle custom PowerBrowser exceptions with their built-in error information
+                WriteError(new ErrorRecord(ex, ex.ErrorId, ex.Category, null));
             }
             catch (Exception ex)
             {
@@ -74,10 +77,7 @@ namespace PowerBrowser.Cmdlets
 
             if (elementInstances == null)
             {
-                WriteError(new ErrorRecord(
-                    new InvalidOperationException("No browser elements are available. Use Find-BrowserElement first."),
-                    "NoElementsAvailable", ErrorCategory.ObjectNotFound, null));
-                return null;
+                throw new ResourceUnavailableException("No elements are currently available.");
             }
 
             // Handle PowerShell PSObject wrapping
@@ -98,18 +98,12 @@ namespace PowerBrowser.Cmdlets
             
             if (string.IsNullOrEmpty(elementId))
             {
-                WriteError(new ErrorRecord(
-                    new InvalidOperationException("Element ID must be specified either through -Element or -ElementId parameter, or by piping a PowerBrowserElement object."),
-                    "ElementIdRequired", ErrorCategory.InvalidArgument, null));
-                return null;
+                throw new RequiredParameterException("Element ID is required to get element attributes.");
             }
 
             if (!elementInstances.ContainsKey(elementId))
             {
-                WriteError(new ErrorRecord(
-                    new InvalidOperationException($"Element '{elementId}' not found. Use Find-BrowserElement first."),
-                    "ElementNotFound", ErrorCategory.ObjectNotFound, elementId));
-                return null;
+                throw new ResourceNotFoundException($"Element '{elementId}' not found.");
             }
 
             return elementInstances[elementId];
@@ -179,11 +173,40 @@ namespace PowerBrowser.Cmdlets
                                 offsetWidth: el.offsetWidth,
                                 offsetHeight: el.offsetHeight,
                                 scrollTop: el.scrollTop,
-                                scrollLeft: el.scrollLeft
+                                scrollLeft: el.scrollLeft,
+                                type: el.type,
+                                id: el.id,
+                                name: el.name,
+                                className: el.className,
+                                placeholder: el.placeholder,
+                                title: el.title,
+                                alt: el.alt,
+                                src: el.src,
+                                href: el.href,
+                                tagName: el.tagName.toLowerCase()
                             })
                         ").GetAwaiter().GetResult();
 
+                        // Add properties both as individual properties AND as Properties collection for backward compatibility
                         result.Properties.Add(new PSNoteProperty("Properties", properties));
+                        
+                        // Add individual properties directly to the result object for easier access
+                        foreach (var prop in properties)
+                        {
+                            if (prop.Key != null && prop.Value != null)
+                            {
+                                // Use PascalCase for property names to follow PowerShell conventions
+                                var propertyName = char.ToUpper(prop.Key[0]) + prop.Key.Substring(1);
+                                try
+                                {
+                                    result.Properties.Add(new PSNoteProperty(propertyName, prop.Value));
+                                }
+                                catch 
+                                {
+                                    // Skip if property name conflicts exist
+                                }
+                            }
+                        }
                     }
                 }
                 else

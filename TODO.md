@@ -5,10 +5,11 @@ This document outlines missing functionality and potential enhancements for the 
 ## 🔥 Phase 1 - Core Navigation & Debugging (High Priority)
 
 ### Navigation Commands
-- [ ] **Navigate-BrowserPage** - Navigate to URLs with wait options
+- [x] **Move-BrowserPage** - Navigate to URLs with wait options ✅ **COMPLETED**
   - Parameters: `-Url`, `-WaitForLoad`, `-Timeout`, `-WaitUntil` (Load, DOMContentLoaded, NetworkIdle)
-  - Pipeline support: Accept PowerBrowserPage objects
+  - Pipeline support: Accept PowerBrowserPage objects via `-Page` or page names via `-PageName`
   - Return: Updated PowerBrowserPage object
+  - Features: Auto URL prefixing, comprehensive error handling, timeout support
 
 - [ ] **Invoke-BrowserScript** - Execute JavaScript in page context
   - Parameters: `-Script`, `-Arguments`, `-ReturnValue`
@@ -149,13 +150,14 @@ This document outlines missing functionality and potential enhancements for the 
 ## 🧪 Testing & Quality Assurance
 
 ### Pester Test Framework
-- [x] **Core test suite** - Comprehensive Pester tests for all functionality
+- [x] **Core test suite** - Comprehensive Pester tests for all functionality ✅ **COMPLETED**
   - Browser management tests (start/stop/lifecycle)
   - Page management tests (creation, naming, navigation)
   - Pipeline integration tests (object chaining)
   - Element interaction tests (find/click/type/attributes)
   - Error handling tests (graceful failures)
   - Regex implementation tests (page name generation)
+  - **Navigation tests (NEW)** - Move-BrowserPage comprehensive testing
 
 ### Additional Testing Needs
 - [ ] **Performance tests** - Load testing with multiple browsers/pages
@@ -207,7 +209,7 @@ This document outlines missing functionality and potential enhancements for the 
 2. **Get-BrowserPageScreenshot** - Great for debugging and documentation
 3. **Send-BrowserKeys** - Common requirement for form interaction
 4. **Get/Set-BrowserElementValue** - Complete form handling
-5. **Navigate-BrowserPage** - Basic but essential navigation
+5. ~~**Navigate-BrowserPage**~~ - ✅ **COMPLETED** as `Move-BrowserPage`
 
 ## 📝 Notes
 

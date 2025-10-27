@@ -4,6 +4,7 @@ using System.Linq;
 using System.Management.Automation;
 using PuppeteerSharp;
 using PowerBrowser.Models;
+using PowerBrowser.Exceptions;
 
 namespace PowerBrowser.Cmdlets
 {
@@ -49,10 +50,7 @@ namespace PowerBrowser.Cmdlets
                 // Resolve page instance from various input sources
                 var (pageInstance, actualPageName) = ResolvePageInstance();
                 
-                if (pageInstance == null)
-                {
-                    return; // Error already written in ResolvePageInstance
-                }
+                // No null check needed - if ResolvePageInstance returns, values are guaranteed valid
 
                 WriteVerbose($"🔍 Finding elements with selector '{Selector}' on page '{actualPageName}'...");
 
@@ -99,6 +97,11 @@ namespace PowerBrowser.Cmdlets
                     WriteObject(element);
                 }
             }
+            catch (PowerBrowserException ex)
+            {
+                // Handle custom PowerBrowser exceptions with their built-in error information
+                WriteError(new ErrorRecord(ex, ex.ErrorId, ex.Category, null));
+            }
             catch (Exception ex)
             {
                 WriteError(new ErrorRecord(ex, "FindBrowserElementFailed", ErrorCategory.OperationStopped, null));
@@ -113,10 +116,7 @@ namespace PowerBrowser.Cmdlets
 
             if (pageInstances == null)
             {
-                WriteError(new ErrorRecord(
-                    new InvalidOperationException("No browser pages are available. Use New-BrowserPage first."),
-                    "NoPagesAvailable", ErrorCategory.ObjectNotFound, null));
-                return (null, null);
+                throw new ResourceUnavailableException("No pages are currently available.");
             }
 
             // Handle PowerShell PSObject wrapping
@@ -137,10 +137,7 @@ namespace PowerBrowser.Cmdlets
             
             if (string.IsNullOrEmpty(pageName))
             {
-                WriteError(new ErrorRecord(
-                    new InvalidOperationException("Page name must be specified either through -Page or -PageName parameter, or by piping a PowerBrowserPage object."),
-                    "PageNameRequired", ErrorCategory.InvalidArgument, null));
-                return (null, null);
+                throw new RequiredParameterException("Page name is required to find elements on a specific page.");
             }
 
             // Try to find page by exact ID first
@@ -158,10 +155,7 @@ namespace PowerBrowser.Cmdlets
                 return (matchingPage.Value, matchingPage.Key);
             }
 
-            WriteError(new ErrorRecord(
-                new InvalidOperationException($"Page '{pageName}' not found. Use Get-BrowserPage to see available pages."),
-                "PageNotFound", ErrorCategory.ObjectNotFound, pageName));
-            return (null, null);
+            throw new ResourceNotFoundException($"Page '{pageName}' not found.");
         }
 
         private IElementHandle[] FindElementsSync(IPage page)

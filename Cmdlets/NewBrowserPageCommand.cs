@@ -5,6 +5,7 @@ using System.Management.Automation;
 using System.Text.RegularExpressions;
 using PuppeteerSharp;
 using PowerBrowser.Models;
+using PowerBrowser.Exceptions;
 
 namespace PowerBrowser.Cmdlets
 {
@@ -48,10 +49,7 @@ namespace PowerBrowser.Cmdlets
                 // Resolve browser instance and name from various input sources
                 var (browserInstance, actualBrowserName) = ResolveBrowserInstance();
                 
-                if (browserInstance == null)
-                {
-                    return; // Error already written in ResolveBrowserInstance
-                }
+                // No null check needed - if ResolveBrowserInstance returns, values are guaranteed valid
 
                 var browser = browserInstance;
 
@@ -124,6 +122,11 @@ namespace PowerBrowser.Cmdlets
                 // Return the PowerBrowserPage object for pipeline chaining
                 WriteObject(powerPage);
             }
+            catch (PowerBrowserException ex)
+            {
+                // Handle custom PowerBrowser exceptions with their built-in error information
+                WriteError(new ErrorRecord(ex, ex.ErrorId, ex.Category, null));
+            }
             catch (Exception ex)
             {
                 WriteError(new ErrorRecord(ex, "NewBrowserPageFailed", ErrorCategory.OperationStopped, null));
@@ -170,10 +173,7 @@ namespace PowerBrowser.Cmdlets
 
             if (browserInstances == null)
             {
-                WriteError(new ErrorRecord(
-                    new InvalidOperationException("No browsers are running. Use Start-Browser first."),
-                    "NoBrowsersRunning", ErrorCategory.ObjectNotFound, null));
-                return (null, null);
+                throw new ResourceUnavailableException("No browsers are currently running.");
             }
 
             // Check if Browser parameter contains a PowerBrowserInstance object
@@ -194,18 +194,12 @@ namespace PowerBrowser.Cmdlets
             
             if (string.IsNullOrEmpty(browserName))
             {
-                WriteError(new ErrorRecord(
-                    new InvalidOperationException("Browser name must be specified either through -Browser or -BrowserName parameter, or by piping a PowerBrowserInstance object."),
-                    "BrowserNameRequired", ErrorCategory.InvalidArgument, null));
-                return (null, null);
+                throw new RequiredParameterException("Browser name is required when creating a page for a specific browser instance.");
             }
 
             if (!browserInstances.ContainsKey(browserName))
             {
-                WriteError(new ErrorRecord(
-                    new InvalidOperationException($"Browser '{browserName}' is not running. Use Start-Browser first."),
-                    "BrowserNotRunning", ErrorCategory.ObjectNotFound, browserName));
-                return (null, null);
+                throw new ResourceNotFoundException($"Browser instance '{browserName}' is not currently running.");
             }
 
             return (browserInstances[browserName], browserName);
