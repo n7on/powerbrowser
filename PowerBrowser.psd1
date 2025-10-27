@@ -23,7 +23,8 @@
         'Find-BrowserElement',
         'Invoke-BrowserElementClick',
         'Set-BrowserElementText',
-        'Get-BrowserElementAttribute'
+        'Get-BrowserElementAttribute',
+        'Wait-BrowserElement'
     )
     VariablesToExport = @()
     AliasesToExport = @('Navigate-Browser', 'Export-BrowserScreenshot')
