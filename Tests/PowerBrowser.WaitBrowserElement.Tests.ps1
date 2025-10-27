@@ -1,12 +1,12 @@
 #Requires -Modules Pester
 
-BeforeAll {
-    $ModulePath = Join-Path $PSScriptRoot '..' 'bin' 'Debug' 'netstandard2.0' 'PowerBrowser.dll'
-    Import-Module $ModulePath -Force
-    $TestBrowserName = 'Chrome'
-}
-
 Describe "Wait-BrowserElement Cmdlet Tests" -Tags @("Wait", "Element", "Core") {
+    BeforeAll {
+        $ModulePath = Join-Path $PSScriptRoot '..' 'bin' 'Debug' 'netstandard2.0' 'PowerBrowser.dll'
+        Import-Module $ModulePath -Force
+        $TestBrowserName = 'Chrome'
+    }
+
     BeforeEach {
         $browser = Start-Browser -Name $TestBrowserName -Headless
         $page = $browser | New-BrowserPage -Name "WaitTest"

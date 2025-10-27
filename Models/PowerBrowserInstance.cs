@@ -20,6 +20,10 @@ namespace PowerBrowser.Models
         public string Size { get; set; }
         public string Path { get; set; }
 
+        // Added a static property to manage instances of PowerBrowserInstance.
+        private static readonly Dictionary<string, PowerBrowserInstance> _instances = new Dictionary<string, PowerBrowserInstance>();
+        public static Dictionary<string, PowerBrowserInstance> Instances => _instances;
+
         public PowerBrowserInstance(string name, IBrowser browser, bool headless, string windowSize)
         {
             Name = name;
@@ -33,13 +37,12 @@ namespace PowerBrowser.Models
         // Properties for PowerShell display
         public int ProcessId => Browser?.Process?.Id ?? -1;
         public string WebSocketEndpoint => Browser?.WebSocketEndpoint ?? "Unknown";
-        public bool IsConnected => Browser?.IsConnected ?? false;
         public bool Running => Browser?.IsConnected ?? false;  // User-friendly alias
         public int PageCount => Pages.Count;
 
         public override string ToString()
         {
-            return $"{Name} (PID: {ProcessId}, Pages: {PageCount}, Connected: {IsConnected})";
+            return $"{Name} (PID: {ProcessId}, Pages: {PageCount}, Running: {Running})";
         }
     }
 }

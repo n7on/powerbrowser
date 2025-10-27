@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Management.Automation;
 
-namespace PowerBrowser.Cmdlets
+namespace PowerBrowser.Cmdlets.Browser
 {
     [Cmdlet(VerbsLifecycle.Uninstall, "Browser")]
     [OutputType(typeof(string))]

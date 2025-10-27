@@ -1,16 +1,16 @@
 #Requires -Modules Pester
 
-BeforeAll {
-    # Import the module
-    $ModulePath = Join-Path $PSScriptRoot '..' 'bin' 'Debug' 'netstandard2.0' 'PowerBrowser.dll'
-    Import-Module $ModulePath -Force
-    
-    # Test configuration
-    $TestBrowserName = 'Chrome'
-    $TestTimeout = 30
-}
-
 Describe "PowerBrowser Core Functionality" {
+    BeforeAll {
+        # Import the module
+        $ModulePath = Join-Path $PSScriptRoot '..' 'bin' 'Debug' 'netstandard2.0' 'PowerBrowser.dll'
+        Import-Module $ModulePath -Force
+        
+        # Test configuration
+        $TestBrowserName = 'Chrome'
+        $TestTimeout = 30
+    }
+
     Context "Browser Management" {
         BeforeEach {
             # Ensure clean state

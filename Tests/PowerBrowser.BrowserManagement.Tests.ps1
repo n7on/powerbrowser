@@ -1,15 +1,16 @@
 #Requires -Modules Pester
 
-BeforeAll {
-    # Import the module
-    $ModulePath = Join-Path $PSScriptRoot '..' 'bin' 'Debug' 'netstandard2.0' 'PowerBrowser.dll'
-    Import-Module $ModulePath -Force
-    
-    # Test configuration
-    $TestBrowserName = 'Chrome'
-}
-
 Describe "PowerBrowser Browser Management" -Tags @("BrowserManagement", "Core") {
+    BeforeAll {
+        # Import the module
+        $ModulePath = Join-Path $PSScriptRoot '..' 'PowerBrowser.psd1'
+        Import-Module $ModulePath -Force
+
+        $TestBrowserName = 'Chrome'
+
+        Install-Browser -BrowserType $TestBrowserName
+    }
+
     # Global cleanup only at the very end to avoid interfering with Context-level browser management
     AfterAll {
         # Final cleanup after all tests
@@ -32,18 +33,18 @@ Describe "PowerBrowser Browser Management" -Tags @("BrowserManagement", "Core") 
             $browsers.Count | Should -BeGreaterThan 0
             
             # Should find Chrome
-            $chrome = $browsers | Where-Object { $_.Name -eq 'Chrome' }
+            $chrome = $browsers | Where-Object { $_.Name -eq $TestBrowserName}
             $chrome | Should -Not -BeNullOrEmpty
-            $chrome.Name | Should -Be 'Chrome'
+            $chrome.Name | Should -Be $TestBrowserName
         }
         
         It "Should show browser installation status" {
             $browsers = Get-Browser
-            $chrome = $browsers | Where-Object { $_.Name -eq 'Chrome' }
+            $chrome = $browsers | Where-Object { $_.Name -eq $TestBrowserName}
             
             # Chrome should have installation information
             $chrome.PSObject.Properties.Name | Should -Contain "Path"
-            $chrome.PSObject.Properties.Name | Should -Contain "IsConnected"
+            $chrome.PSObject.Properties.Name | Should -Contain "Running"
             $chrome.PSObject.Properties.Name | Should -Contain "ProcessId"
         }
     }
@@ -63,7 +64,7 @@ Describe "PowerBrowser Browser Management" -Tags @("BrowserManagement", "Core") 
             $browser.GetType().Name | Should -Be "PowerBrowserInstance"
             
             # Verify browser is running
-            $runningBrowsers = Get-Browser | Where-Object { $_.IsConnected -eq $true }
+            $runningBrowsers = Get-Browser | Where-Object { $_.Running -eq $true }
             $runningBrowsers | Should -Not -BeNullOrEmpty
             $runningBrowser = $runningBrowsers | Where-Object { $_.Name -eq $TestBrowserName }
             $runningBrowser | Should -Not -BeNullOrEmpty
@@ -72,7 +73,7 @@ Describe "PowerBrowser Browser Management" -Tags @("BrowserManagement", "Core") 
             Stop-Browser -Name $TestBrowserName
             
             # Verify browser is stopped
-            $stoppedBrowsers = Get-Browser | Where-Object { $_.Name -eq $TestBrowserName -and $_.IsConnected -eq $true }
+            $stoppedBrowsers = Get-Browser | Where-Object { $_.Name -eq $TestBrowserName -and $_.Running -eq $false }
             $stoppedBrowsers | Should -BeNullOrEmpty
         }
         
@@ -101,7 +102,7 @@ Describe "PowerBrowser Browser Management" -Tags @("BrowserManagement", "Core") 
             $browser | Should -Not -BeNullOrEmpty
             
             # Browser should be running
-            $runningBrowser = Get-Browser | Where-Object { $_.Name -eq $TestBrowserName -and $_.IsConnected -eq $true }
+            $runningBrowser = Get-Browser | Where-Object { $_.Name -eq $TestBrowserName -and $_.Running -eq $true }
             $runningBrowser | Should -Not -BeNullOrEmpty
         }
     }
@@ -182,7 +183,7 @@ Describe "PowerBrowser Browser Management" -Tags @("BrowserManagement", "Core") 
             
             # Check required properties
             $browser.Name | Should -Be $TestBrowserName
-            $browser.PSObject.Properties.Name | Should -Contain "IsConnected"
+            $browser.PSObject.Properties.Name | Should -Contain "Running"
             $browser.PSObject.Properties.Name | Should -Contain "ProcessId"
             $browser.PSObject.Properties.Name | Should -Contain "PageCount"
             $browser.PSObject.Properties.Name | Should -Contain "Path"

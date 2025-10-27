@@ -1,24 +1,10 @@
 #Requires -Modules Pester
 
-BeforeAll {
-    # Import the module
-    $ModulePath = Join-Path $PSScriptRoot '..' 'bin' 'Debug' 'netstandard2.0' 'PowerBrowser.dll'
-    Import-Module $ModulePath -Force
-}
-
 Describe "PowerBrowser Exception Handling" -Tags @("Exceptions", "ErrorHandling") {
-    BeforeEach {
-        # Ensure clean state - no browsers or pages running
-        Get-Browser | Where-Object Running | ForEach-Object { 
-            Stop-Browser -Name $_.Name -ErrorAction SilentlyContinue 
-        }
-    }
-    
-    AfterEach {
-        # Cleanup after each test
-        Get-Browser | Where-Object Running | ForEach-Object { 
-            Stop-Browser -Name $_.Name -ErrorAction SilentlyContinue 
-        }
+    BeforeAll {
+        # Import the module
+        $ModulePath = Join-Path $PSScriptRoot '..' 'bin' 'Debug' 'netstandard2.0' 'PowerBrowser.dll'
+        Import-Module $ModulePath -Force
     }
 
     Context "ResourceUnavailableException Error Handling" {

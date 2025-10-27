@@ -1,16 +1,14 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Management.Automation;
-using PuppeteerSharp;
 using PowerBrowser.Models;
 using PowerBrowser.Exceptions;
 
-namespace PowerBrowser.Cmdlets
+namespace PowerBrowser.Cmdlets.BrowserElement
 {
     [Cmdlet(VerbsCommon.Get, "BrowserElementAttribute")]
     [OutputType(typeof(PSObject))]
-    public class GetBrowserElementAttributeCommand : BrowserCmdletBase
+    public class GetBrowserElementAttributeCommand : BrowserElementBase
     {
         [Parameter(
             Position = 0,
@@ -54,7 +52,7 @@ namespace PowerBrowser.Cmdlets
 
                 var result = GetElementInfoSync(powerElement);
 
-                WriteVerbose($"✅ Successfully retrieved element information for '{powerElement.TagName}' element");
+                WriteVerbose($"Successfully retrieved element information for '{powerElement.TagName}' element");
 
                 // Return the information object
                 WriteObject(result);
@@ -72,8 +70,8 @@ namespace PowerBrowser.Cmdlets
 
         private PowerBrowserElement ResolveElementInstance()
         {
-            var sessionStore = SessionState.PSVariable;
-            var elementInstances = sessionStore.GetValue("PowerBrowserElements") as Dictionary<string, PowerBrowserElement>;
+            // Updated the ResolveElementInstance method to use PowerBrowserElement.GetAllElements.
+            var elementInstances = PowerBrowserElement.GetAllElements();
 
             if (elementInstances == null)
             {

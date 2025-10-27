@@ -10,7 +10,7 @@ namespace PowerBrowser.Cmdlets
 {
     [Cmdlet(VerbsCommon.Remove, "BrowserPage")]
     [OutputType(typeof(string))]
-    public class RemoveBrowserPageCommand : BrowserCmdletBase
+    public class RemoveBrowserPageCommand : PSCmdlet
     {
         [Parameter(
             Position = 0,
@@ -26,6 +26,16 @@ namespace PowerBrowser.Cmdlets
 
         [Parameter(HelpMessage = "Force close without confirmation")]
         public SwitchParameter Force { get; set; }
+
+        private readonly Dictionary<string, IPage> _pageInstances;
+        private readonly Dictionary<string, PowerBrowserPage> _powerPageInstances;
+
+        public RemoveBrowserPageCommand()
+        {
+            // Initialize with current session's page instances
+            _pageInstances = GetPageInstances();
+            _powerPageInstances = GetPowerBrowserPageObjects();
+        }
 
         protected override void ProcessRecord()
         {
@@ -81,15 +91,6 @@ namespace PowerBrowser.Cmdlets
 
         private (IPage page, string pageId, string pageName) ResolvePageInstance()
         {
-            var sessionStore = SessionState.PSVariable;
-            var pageInstances = sessionStore.GetValue("PowerBrowserPages") as Dictionary<string, IPage>;
-            var powerPageInstances = sessionStore.GetValue("PowerBrowserPageObjects") as Dictionary<string, PowerBrowserPage>;
-
-            if (pageInstances == null)
-            {
-                throw new ResourceUnavailableException("No pages are currently open.");
-            }
-
             // Handle PowerShell PSObject wrapping
             var actualPage = Page;
             if (Page is PSObject psObj && psObj.BaseObject is PowerBrowserPage)
@@ -112,13 +113,13 @@ namespace PowerBrowser.Cmdlets
             }
 
             // Try to find the page by exact ID first, then by partial match (page name)
-            var matchingPageId = FindMatchingPageId(pageInstances, pageIdentifier);
+            var matchingPageId = FindMatchingPageId(_pageInstances, pageIdentifier);
             if (string.IsNullOrEmpty(matchingPageId))
             {
                 throw new ResourceNotFoundException($"Page '{pageIdentifier}' not found.");
             }
 
-            var page = pageInstances[matchingPageId];
+            var page = _pageInstances[matchingPageId];
             var parts = matchingPageId.Split('_');
             var pageName = parts.Length > 1 ? string.Join("_", parts.Skip(1)) : matchingPageId;
 
@@ -127,15 +128,8 @@ namespace PowerBrowser.Cmdlets
 
         private void CleanupPageFromSession(string pageId)
         {
-            var sessionStore = SessionState.PSVariable;
-            var pageInstances = sessionStore.GetValue("PowerBrowserPages") as Dictionary<string, IPage>;
-            var powerPageInstances = sessionStore.GetValue("PowerBrowserPageObjects") as Dictionary<string, PowerBrowserPage>;
-
-            if (pageInstances != null) pageInstances.Remove(pageId);
-            if (powerPageInstances != null) powerPageInstances.Remove(pageId);
-
-            sessionStore.Set("PowerBrowserPages", pageInstances);
-            sessionStore.Set("PowerBrowserPageObjects", powerPageInstances);
+            if (_pageInstances != null) _pageInstances.Remove(pageId);
+            if (_powerPageInstances != null) _powerPageInstances.Remove(pageId);
         }
 
         private string FindMatchingPageId(Dictionary<string, IPage> pageInstances, string searchTerm)
@@ -172,6 +166,20 @@ namespace PowerBrowser.Cmdlets
             {
                 return "Unknown";
             }
+        }
+
+        private Dictionary<string, IPage> GetPageInstances()
+        {
+            // This method should retrieve the current session's page instances
+            // Implementation depends on the rest of the application's architecture
+            throw new NotImplementedException();
+        }
+
+        private Dictionary<string, PowerBrowserPage> GetPowerBrowserPageObjects()
+        {
+            // This method should retrieve the current session's PowerBrowserPage objects
+            // Implementation depends on the rest of the application's architecture
+            throw new NotImplementedException();
         }
     }
 }

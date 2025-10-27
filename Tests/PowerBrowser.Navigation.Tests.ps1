@@ -1,15 +1,15 @@
 #Requires -Modules Pester
 
-BeforeAll {
-    # Import the module
-    $ModulePath = Join-Path $PSScriptRoot '..' 'bin' 'Debug' 'netstandard2.0' 'PowerBrowser.dll'
-    Import-Module $ModulePath -Force
-    
-    # Test configuration
-    $TestBrowserName = 'Chrome'
-}
-
 Describe "Move-BrowserPage Navigation Tests" -Tags @("Navigation", "Core") {
+    BeforeAll {
+        # Import the module
+        $ModulePath = Join-Path $PSScriptRoot '..' 'bin' 'Debug' 'netstandard2.0' 'PowerBrowser.dll'
+        Import-Module $ModulePath -Force
+        
+        # Test configuration
+        $TestBrowserName = 'Chrome'
+    }
+
     BeforeEach {
         # Ensure clean state
         Get-Browser | Where-Object Running | ForEach-Object { 

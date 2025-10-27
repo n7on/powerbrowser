@@ -9,7 +9,7 @@ namespace PowerBrowser.Cmdlets
 {
     [Cmdlet(VerbsCommon.Get, "BrowserPage")]
     [OutputType(typeof(PowerBrowserPage))]
-    public class GetBrowserPageCommand : BrowserCmdletBase
+    public class GetBrowserPageCommand : PSCmdlet
     {
         [Parameter(
             Position = 0,
@@ -25,6 +25,15 @@ namespace PowerBrowser.Cmdlets
         [Parameter(HelpMessage = "Specific page ID to get details for")]
         public string PageId { get; set; } = string.Empty;
 
+        private readonly Dictionary<string, PowerBrowserPage> _powerBrowserPageObjects;
+        private readonly Dictionary<string, IPage> _powerBrowserPages;
+
+        public GetBrowserPageCommand()
+        {
+            _powerBrowserPageObjects = new Dictionary<string, PowerBrowserPage>();
+            _powerBrowserPages = new Dictionary<string, IPage>();
+        }
+
         protected override void ProcessRecord()
         {
             try
@@ -32,12 +41,8 @@ namespace PowerBrowser.Cmdlets
                 // Resolve browser name from input if provided
                 var targetBrowserName = ResolveBrowserName();
 
-                var sessionStore = SessionState.PSVariable;
-                var powerPageInstances = sessionStore.GetValue("PowerBrowserPageObjects") as Dictionary<string, PowerBrowserPage>;
-                var pageInstances = sessionStore.GetValue("PowerBrowserPages") as Dictionary<string, IPage>;
-
-                if ((powerPageInstances == null || powerPageInstances.Count == 0) && 
-                    (pageInstances == null || pageInstances.Count == 0))
+                if ((_powerBrowserPageObjects == null || _powerBrowserPageObjects.Count == 0) && 
+                    (_powerBrowserPages == null || _powerBrowserPages.Count == 0))
                 {
                     WriteWarning("No browser pages are currently open.");
                     WriteInformation("Use 'Start-Browser | New-BrowserPage' to create pages.", new string[] { "PSHOST" });
@@ -47,9 +52,9 @@ namespace PowerBrowser.Cmdlets
                 // Get pages to return, prioritizing PowerBrowserPage objects
                 var pagesToReturn = new List<PowerBrowserPage>();
 
-                if (powerPageInstances != null)
+                if (_powerBrowserPageObjects != null)
                 {
-                    var query = powerPageInstances.Values.Where(p => p.Page != null && !p.Page.IsClosed);
+                    var query = _powerBrowserPageObjects.Values.Where(p => p.Page != null && !p.Page.IsClosed);
                     
                     // Filter by browser name if specified
                     if (!string.IsNullOrEmpty(targetBrowserName))

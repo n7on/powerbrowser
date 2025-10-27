@@ -5,11 +5,11 @@ using PuppeteerSharp;
 using PowerBrowser.Models;
 using PowerBrowser.Exceptions;
 
-namespace PowerBrowser.Cmdlets
+namespace PowerBrowser.Cmdlets.Browser
 {
     [Cmdlet(VerbsLifecycle.Stop, "Browser")]
     [OutputType(typeof(string))]
-    public class StopBrowserCommand : BrowserCmdletBase
+    public class StopBrowserCommand : PSCmdlet
     {
         [Parameter(
             Position = 0,
@@ -17,12 +17,10 @@ namespace PowerBrowser.Cmdlets
             ValueFromPipeline = true,
             ValueFromPipelineByPropertyName = true,
             HelpMessage = "PowerBrowserInstance object from Start-Browser or browser name")]
-        [ArgumentCompleter(typeof(RunningBrowserCompleter))]
         public object Browser { get; set; }
 
         [Parameter(
             HelpMessage = "Name of the browser to stop (used when Browser parameter is not provided)")]
-        [ArgumentCompleter(typeof(RunningBrowserCompleter))]
         public string Name { get; set; } = string.Empty;
 
         [Parameter(HelpMessage = "Force stop without confirmation")]
@@ -82,11 +80,9 @@ namespace PowerBrowser.Cmdlets
 
         private (IBrowser browser, string browserName) ResolveBrowserInstance()
         {
-            var sessionStore = SessionState.PSVariable;
-            var browserInstances = sessionStore.GetValue("PowerBrowserInstances") as Dictionary<string, IBrowser>;
-            var powerBrowserInstances = sessionStore.GetValue("PowerBrowserObjects") as Dictionary<string, PowerBrowserInstance>;
+            var browserInstances = PowerBrowserInstance.Instances;
 
-            if (browserInstances == null)
+            if (browserInstances == null || browserInstances.Count == 0)
             {
                 throw new ResourceUnavailableException("No browsers are currently running.");
             }
@@ -117,51 +113,15 @@ namespace PowerBrowser.Cmdlets
                 throw new ResourceNotFoundException($"Browser instance '{browserName}' is not currently running.");
             }
 
-            return (browserInstances[browserName], browserName);
+            // Adjusted the return statement to extract the IBrowser instance from PowerBrowserInstance.
+            return (browserInstances[browserName].Browser, browserName);
         }
 
         private void CleanupBrowserFromSession(string browserName)
         {
-            var sessionStore = SessionState.PSVariable;
-            var browserInstances = sessionStore.GetValue("PowerBrowserInstances") as Dictionary<string, IBrowser>;
-            var powerBrowserInstances = sessionStore.GetValue("PowerBrowserObjects") as Dictionary<string, PowerBrowserInstance>;
+            var browserInstances = PowerBrowserInstance.Instances;
             
             if (browserInstances != null) browserInstances.Remove(browserName);
-            if (powerBrowserInstances != null) powerBrowserInstances.Remove(browserName);
-            
-            sessionStore.Set("PowerBrowserInstances", browserInstances);
-            sessionStore.Set("PowerBrowserObjects", powerBrowserInstances);
-        }
-    }
-
-    public class RunningBrowserCompleter : IArgumentCompleter
-    {
-        public IEnumerable<CompletionResult> CompleteArgument(string commandName, string parameterName,
-            string wordToComplete, System.Management.Automation.Language.CommandAst commandAst,
-            System.Collections.IDictionary fakeBoundParameters)
-        {
-            var results = new List<CompletionResult>();
-
-            try
-            {
-                // This is a simplified completer - in a real session, we'd access the session state
-                // For now, we'll return common browser names
-                var commonBrowsers = new[] { "Chrome", "Firefox", "ChromeHeadlessShell", "Chromium" };
-
-                foreach (var browserName in commonBrowsers)
-                {
-                    if (browserName.StartsWith(wordToComplete, StringComparison.OrdinalIgnoreCase))
-                    {
-                        results.Add(new CompletionResult(browserName, browserName, CompletionResultType.ParameterValue, browserName));
-                    }
-                }
-            }
-            catch
-            {
-                // Ignore errors during completion
-            }
-
-            return results;
         }
     }
 }

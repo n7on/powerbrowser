@@ -1,16 +1,14 @@
 using System;
-using System.Collections.Generic;
 using System.Management.Automation;
 using System.Threading.Tasks;
-using PuppeteerSharp;
 using PowerBrowser.Models;
 using PowerBrowser.Exceptions;
 
-namespace PowerBrowser.Cmdlets
+namespace PowerBrowser.Cmdlets.BrowserElement
 {
     [Cmdlet(VerbsLifecycle.Wait, "BrowserElement")]
     [OutputType(typeof(PowerBrowserElement))]
-    public class WaitBrowserElementCommand : BrowserCmdletBase
+    public class WaitBrowserElementCommand : BrowserElementBase
     {
         [Parameter(
             Position = 0,

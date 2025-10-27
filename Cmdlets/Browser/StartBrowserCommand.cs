@@ -6,8 +6,9 @@ using System.Management.Automation;
 using System.Threading.Tasks;
 using PuppeteerSharp;
 using PowerBrowser.Models;
+using PowerBrowser.Helpers;
 
-namespace PowerBrowser.Cmdlets
+namespace PowerBrowser.Cmdlets.Browser
 {
     [Cmdlet(VerbsLifecycle.Start, "Browser")]
     [OutputType(typeof(PowerBrowserInstance))]
@@ -33,50 +34,33 @@ namespace PowerBrowser.Cmdlets
         [Parameter(HelpMessage = "Window height (default: 720)")]
         public int Height { get; set; } = 720;
 
+        public static IReadOnlyList<IBrowser> RunningBrowsers => _runningBrowsers;
+
+        private static readonly List<IBrowser> _runningBrowsers = new List<IBrowser>();
+
         protected override void ProcessRecord()
         {
             try
             {
-                var namedBrowserPath = GetNamedBrowserPath(Name);
-                
-                if (!Directory.Exists(namedBrowserPath))
-                {
-                    WriteError(new ErrorRecord(
-                        new DirectoryNotFoundException($"Browser '{Name}' not found. Use Get-Browser to see installed browsers."),
-                        "BrowserNotFound", ErrorCategory.ObjectNotFound, Name));
-                    return;
-                }
+                WriteVerbose("Starting a new browser instance.");
 
-                WriteVerbose($"🚀 Starting {Name} using PuppeteerSharp...");
+                var browser = LaunchBrowser();
+                var browserName = Guid.NewGuid().ToString(); // Generate a unique name for the browser instance
 
-                var browser = LaunchBrowserAsync().GetAwaiter().GetResult();
-                
-                // Create PowerBrowser wrapper object
-                var powerBrowser = new PowerBrowserInstance(
-                    Name, 
-                    browser, 
-                    Headless.IsPresent, 
-                    $"{Width}x{Height}"
+                var powerBrowserInstance = new PowerBrowserInstance(
+                    browserName,
+                    browser,
+                    false, // Default value for Headless
+                    "Unknown" // Replace with actual viewport size if available
                 );
-                
-                // Store browser instance for backward compatibility and cross-command access
-                var sessionStore = SessionState.PSVariable;
-                var browserInstances = sessionStore.GetValue("PowerBrowserInstances") as Dictionary<string, IBrowser> 
-                    ?? new Dictionary<string, IBrowser>();
-                var powerBrowserInstances = sessionStore.GetValue("PowerBrowserObjects") as Dictionary<string, PowerBrowserInstance>
-                    ?? new Dictionary<string, PowerBrowserInstance>();
-                
-                browserInstances[Name] = browser;
-                powerBrowserInstances[Name] = powerBrowser;
-                sessionStore.Set("PowerBrowserInstances", browserInstances);
-                sessionStore.Set("PowerBrowserObjects", powerBrowserInstances);
+                WriteVerbose($"Started browser instance: {browserName}");
+                SessionStateHelper.SaveBrowserInstance(powerBrowserInstance, this.SessionState);
 
-                WriteVerbose($"✅ Browser '{Name}' started successfully!");
-                WriteVerbose($"📊 Process ID: {powerBrowser.ProcessId}");
-                WriteVerbose($"🔗 WebSocket: {powerBrowser.WebSocketEndpoint}");
-                
-                // Return the PowerBrowser object for pipeline chaining
-                WriteObject(powerBrowser);
+                WriteObject(powerBrowserInstance);
+            }
+            catch (PipelineStoppedException)
+            {
+                // Swallow the exception as it indicates the pipeline was stopped intentionally
             }
             catch (Exception ex)
             {
@@ -84,7 +68,7 @@ namespace PowerBrowser.Cmdlets
             }
         }
 
-        private async Task<IBrowser> LaunchBrowserAsync()
+        private IBrowser LaunchBrowser()
         {
             var namedBrowserPath = GetNamedBrowserPath(Name);
             
@@ -121,7 +105,7 @@ namespace PowerBrowser.Cmdlets
             WriteVerbose($"Launching browser from: {launchOptions.ExecutablePath}");
             WriteVerbose($"Arguments: {string.Join(" ", launchOptions.Args ?? Array.Empty<string>())}");
 
-            return await Puppeteer.LaunchAsync(launchOptions);
+            return Puppeteer.LaunchAsync(launchOptions).GetAwaiter().GetResult();
         }
 
         private string[] BuildBrowserArguments()

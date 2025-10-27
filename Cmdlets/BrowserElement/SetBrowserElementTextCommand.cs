@@ -1,15 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Management.Automation;
-using PuppeteerSharp;
 using PowerBrowser.Models;
 using PowerBrowser.Exceptions;
 
-namespace PowerBrowser.Cmdlets
+namespace PowerBrowser.Cmdlets.BrowserElement
 {
     [Cmdlet(VerbsCommon.Set, "BrowserElementText")]
     [OutputType(typeof(PowerBrowserElement))]
-    public class SetBrowserElementTextCommand : BrowserCmdletBase
+    public class SetBrowserElementTextCommand : BrowserElementBase
     {
         [Parameter(
             Position = 0,
@@ -54,11 +53,11 @@ namespace PowerBrowser.Cmdlets
                 
                 // No null check needed - if ResolveElementInstance returns, value is guaranteed valid
 
-                WriteVerbose($"⌨️ Typing '{Text}' into element '{powerElement}' on page '{powerElement.PageName}'...");
+                WriteVerbose($"Typing '{Text}' into element '{powerElement}' on page '{powerElement.PageName}'...");
 
                 PerformTypingSync(powerElement);
 
-                WriteVerbose($"✅ Successfully typed text into '{powerElement.TagName}' element on page '{powerElement.PageName}'");
+                WriteVerbose($"Successfully typed text into '{powerElement.TagName}' element on page '{powerElement.PageName}'");
 
                 // Return the same element for continued chaining
                 WriteObject(powerElement);
@@ -76,8 +75,8 @@ namespace PowerBrowser.Cmdlets
 
         private PowerBrowserElement ResolveElementInstance()
         {
-            var sessionStore = SessionState.PSVariable;
-            var elementInstances = sessionStore.GetValue("PowerBrowserElements") as Dictionary<string, PowerBrowserElement>;
+            // Updated the ResolveElementInstance method to use PowerBrowserElement.GetAllElements.
+            var elementInstances = PowerBrowserElement.GetAllElements();
 
             if (elementInstances == null)
             {
