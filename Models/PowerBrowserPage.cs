@@ -17,9 +17,6 @@ namespace PowerBrowser.Models
         public int ViewportWidth { get; set; }
         public int ViewportHeight { get; set; }
 
-        // Added a static property and method to manage and retrieve all PowerBrowserPage instances.
-        private static readonly Dictionary<string, PowerBrowserPage> _pages = new Dictionary<string, PowerBrowserPage>();
-        public static Dictionary<string, PowerBrowserPage> Pages => _pages;
 
         public PowerBrowserPage(string pageId, string pageName, PowerBrowserInstance browser, IPage page, int width, int height)
         {
@@ -30,13 +27,10 @@ namespace PowerBrowser.Models
             CreatedTime = DateTime.Now;
             ViewportWidth = width;
             ViewportHeight = height;
-
-            // Add the new instance to the static dictionary
-            _pages[pageId] = this;
         }
 
         // Properties for PowerShell display
-        public string BrowserName => Browser?.Name ?? "Unknown";
+        public string BrowserType => Browser?.BrowserType ?? "Unknown";
         public string ViewportSize => $"{ViewportWidth}x{ViewportHeight}";
         public bool IsClosed => Page?.IsClosed ?? true;
 

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using PuppeteerSharp;
+using System.Management.Automation;
 
 namespace PowerBrowser.Models
 {
@@ -9,8 +10,10 @@ namespace PowerBrowser.Models
     /// </summary>
     public class PowerBrowserInstance
     {
-        public string Name { get; set; }
+    
+        [Hidden]
         public IBrowser Browser { get; set; }
+        public string BrowserType { get; set; }
         public DateTime StartTime { get; set; }
         public bool Headless { get; set; }
         public string WindowSize { get; set; }
@@ -20,18 +23,27 @@ namespace PowerBrowser.Models
         public string Size { get; set; }
         public string Path { get; set; }
 
-        // Added a static property to manage instances of PowerBrowserInstance.
-        private static readonly Dictionary<string, PowerBrowserInstance> _instances = new Dictionary<string, PowerBrowserInstance>();
-        public static Dictionary<string, PowerBrowserInstance> Instances => _instances;
-
-        public PowerBrowserInstance(string name, IBrowser browser, bool headless, string windowSize)
+        public PowerBrowserInstance(IBrowser browser, bool headless, string windowSize, string path)
         {
-            Name = name;
             Browser = browser;
+            BrowserType = browser?.BrowserType.ToString() ?? "Unknown";
             StartTime = DateTime.Now;
             Headless = headless;
             WindowSize = windowSize;
             Pages = new List<PowerBrowserPage>();
+            Path = path;
+        }
+
+        public PowerBrowserInstance(string path)
+        {
+            Browser = null; // No actual browser instance
+            BrowserType = System.IO.Path.GetFileName(path);
+            StartTime = DateTime.Now;
+            Headless = false;
+            WindowSize = "Unknown"; // Default size
+            Path = path;
+            Pages = new List<PowerBrowserPage>();
+            Size = "Unknown"; // Default size
         }
 
         // Properties for PowerShell display
@@ -42,7 +54,7 @@ namespace PowerBrowser.Models
 
         public override string ToString()
         {
-            return $"{Name} (PID: {ProcessId}, Pages: {PageCount}, Running: {Running})";
+            return $"(PID: {ProcessId}, Pages: {PageCount}, Running: {Running})";
         }
     }
 }

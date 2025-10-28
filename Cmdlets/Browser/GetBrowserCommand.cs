@@ -9,15 +9,15 @@ namespace PowerBrowser.Cmdlets.Browser
 {
     [Cmdlet(VerbsCommon.Get, "Browser")]
     [OutputType(typeof(PowerBrowserInstance))]
-    public class GetBrowserCommand : BrowserCmdletBase
+    public class GetBrowserCommand : PSCmdlet
     {
         protected override void ProcessRecord()
         {
             try
             {
-                WriteVerbose("Retrieving running browsers from session state.");
-
-                var runningBrowsers = SessionStateHelper.GetRunningBrowsers(this.SessionState);
+                // todo: it should always just show the installed browsers. 
+                // And the IBrowser object should be the one that is saved in SessionState.
+                var runningBrowsers = SessionStateHelper.GetRunningBrowsers(SessionState);
 
                 if (runningBrowsers.Count == 0)
                 {
@@ -25,9 +25,9 @@ namespace PowerBrowser.Cmdlets.Browser
                     return;
                 }
 
-                foreach (var browserInstance in runningBrowsers.Values)
+                foreach (var browser in runningBrowsers.Values)
                 {
-                    WriteObject(browserInstance);
+                    WriteObject(browser);
                 }
             }
             catch (Exception ex)

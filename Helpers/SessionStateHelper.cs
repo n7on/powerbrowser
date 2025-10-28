@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Management.Automation;
+using System.Runtime.CompilerServices;
 using PowerBrowser.Models;
 
 namespace PowerBrowser.Helpers
@@ -22,7 +23,7 @@ namespace PowerBrowser.Helpers
                 sessionState.PSVariable.Set(RunningBrowsersKey, runningBrowsers);
             }
 
-            runningBrowsers[browserInstance.Name] = browserInstance;
+            runningBrowsers[browserInstance.ProcessId.ToString()] = browserInstance;
         }
 
         public static Dictionary<string, PowerBrowserInstance> GetRunningBrowsers(SessionState sessionState)
@@ -40,17 +41,13 @@ namespace PowerBrowser.Helpers
             return new Dictionary<string, PowerBrowserInstance>();
         }
 
-        public static void RemoveBrowserInstance(string processId, SessionState sessionState)
+        public static void RemoveBrowserInstance(int processId, SessionState sessionState)
         {
-            if (sessionState == null)
-            {
-                throw new ArgumentNullException(nameof(sessionState));
-            }
 
             var runningBrowsers = GetRunningBrowsers(sessionState);
-            if (runningBrowsers.ContainsKey(processId))
+            if (runningBrowsers.ContainsKey(processId.ToString()))
             {
-                runningBrowsers.Remove(processId);
+                runningBrowsers.Remove(processId.ToString());
                 sessionState.PSVariable.Set(RunningBrowsersKey, runningBrowsers);
             }
         }

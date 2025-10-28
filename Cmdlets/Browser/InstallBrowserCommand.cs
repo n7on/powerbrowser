@@ -3,12 +3,13 @@ using System.IO;
 using System.Management.Automation;
 using PuppeteerSharp;
 using PowerBrowser.Models;
+using PowerBrowser.Helpers;
 
 namespace PowerBrowser.Cmdlets.Browser
 {
     [Cmdlet(VerbsLifecycle.Install, "Browser")]
     [OutputType(typeof(PowerBrowserInstance))]
-    public class InstallBrowserCommand : BrowserCmdletBase
+    public class InstallBrowserCommand : PSCmdlet
     {
         [Parameter(
             Position = 0,
@@ -20,16 +21,19 @@ namespace PowerBrowser.Cmdlets.Browser
             try
             {
                 var browserName = BrowserType.ToString();
-                var namedBrowserPath = GetNamedBrowserPath(browserName);
+                var path = BrowserHelper.GetBrowserInstancePath(BrowserType);
                 
                 // Check if browser is already installed
-                if (!Directory.Exists(namedBrowserPath))
+                if (!Directory.Exists(path))
                 {
                     WriteVerbose($"Downloading {BrowserType}... This may take a few minutes depending on your connection.");
-                    DownloadBrowserSync(browserName, BrowserType);
+                    BrowserHelper.DownloadBrowser(BrowserType);
+                }
+                else
+                {
+                    WriteVerbose($"{BrowserType} is already installed at {path}.");
                 }
                 
-                WriteObject(CreateBrowserInstance(browserName, namedBrowserPath));
             }
             catch (Exception ex)
             {
