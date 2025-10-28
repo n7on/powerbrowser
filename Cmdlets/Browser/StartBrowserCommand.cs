@@ -83,7 +83,7 @@ namespace PowerBrowser.Cmdlets.Browser
                     Width = Width,
                     Height = Height
                 },
-                Args = BuildBrowserArguments()
+                //Args = BuildBrowserArguments()
             };
 
             // Set the executable path using BrowserFetcher
@@ -104,7 +104,7 @@ namespace PowerBrowser.Cmdlets.Browser
 
             WriteVerbose($"Launching browser from: {launchOptions.ExecutablePath}");
             WriteVerbose($"Arguments: {string.Join(" ", launchOptions.Args ?? Array.Empty<string>())}");
-
+        
             return Puppeteer.LaunchAsync(launchOptions).GetAwaiter().GetResult();
         }
 
