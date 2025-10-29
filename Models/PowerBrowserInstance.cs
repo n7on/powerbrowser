@@ -34,9 +34,9 @@ namespace PowerBrowser.Models
             Path = path;
         }
 
-        public PowerBrowserInstance(string path)
+        public PowerBrowserInstance(string path, IBrowser browser)
         {
-            Browser = null; // No actual browser instance
+            Browser = browser;
             BrowserType = System.IO.Path.GetFileName(path);
             StartTime = DateTime.Now;
             Headless = false;

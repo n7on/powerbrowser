@@ -19,7 +19,25 @@ namespace PowerBrowser.Helpers
             }
             throw new ArgumentException($"Invalid browser type: {browserTypeStr}");
         }
-        public static List<PowerBrowserInstance> GetBrowsers()
+        public static string[] GetInstalledBrowserTypes()
+        {
+            var storagePath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "PowerBrowser", "Browsers"
+            );
+
+            if (!Directory.Exists(storagePath))
+            {
+                return Array.Empty<string>();
+            }
+
+            var supportedBrowserNames = Enum.GetNames(typeof(SupportedBrowser));
+            return Directory.GetDirectories(storagePath)
+                .Where(dir => supportedBrowserNames.Contains(Path.GetFileName(dir)))
+                .Select(dir => Path.GetFileName(dir))
+                .ToArray();
+        }
+        public static List<PowerBrowserInstance> GetBrowsers(SessionState sessionState)
         {
             var storagePath = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
@@ -30,12 +48,15 @@ namespace PowerBrowser.Helpers
             {
                 return new List<PowerBrowserInstance>();
             }
-
+            var browsers = SessionStateHelper.GetRunningBrowsers(sessionState);
             var supportedBrowserNames = Enum.GetNames(typeof(SupportedBrowser));
             return Directory.GetDirectories(storagePath)
-                .Where(dir => supportedBrowserNames.Contains(Path.GetFileName(dir))) // Filter only supported browser names
-                .Select(dir => new PowerBrowserInstance(dir))
-                .ToList();
+                .Where(dir => supportedBrowserNames.Contains(Path.GetFileName(dir)))
+                .Select(dir => {
+                    var key = Path.GetFileName(dir);
+                    browsers.TryGetValue(key, out var browser);
+                    return new PowerBrowserInstance(dir, browser);
+                }).ToList();
         }
         public static string GetBrowserStoragePath()
         {
@@ -89,7 +110,7 @@ namespace PowerBrowser.Helpers
 
             browser.Browser.CloseAsync().GetAwaiter().GetResult();
 
-            SessionStateHelper.RemoveBrowserInstance(browser.ProcessId, sessionState);
+            SessionStateHelper.RemoveBrowserInstance(browser.BrowserType, sessionState);
             return true;
         }
         public static PowerBrowserInstance StartBrowser(SupportedBrowser browserType, bool headless, int width, int height, SessionState sessionState)
@@ -131,7 +152,7 @@ namespace PowerBrowser.Helpers
                 path
             );
 
-            SessionStateHelper.SaveBrowserInstance(powerBrowserInstance, sessionState);
+            SessionStateHelper.SaveBrowserInstance(powerBrowserInstance.BrowserType, browser, sessionState);
 
             return powerBrowserInstance;
         }

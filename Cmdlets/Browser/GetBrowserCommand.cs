@@ -17,7 +17,7 @@ namespace PowerBrowser.Cmdlets.Browser
             {
                 // todo: it should always just show the installed browsers. 
                 // And the IBrowser object should be the one that is saved in SessionState.
-                var runningBrowsers = SessionStateHelper.GetRunningBrowsers(SessionState);
+                var runningBrowsers = BrowserHelper.GetBrowsers(SessionState); 
 
                 if (runningBrowsers.Count == 0)
                 {
@@ -25,7 +25,7 @@ namespace PowerBrowser.Cmdlets.Browser
                     return;
                 }
 
-                foreach (var browser in runningBrowsers.Values)
+                foreach (var browser in runningBrowsers)
                 {
                     WriteObject(browser);
                 }

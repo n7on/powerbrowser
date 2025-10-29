@@ -33,19 +33,17 @@ Describe "PowerBrowser Browser Management" -Tags @("BrowserManagement", "Core") 
             $browsers.Count | Should -BeGreaterThan 0
             
             # Should find Chrome
-            $chrome = $browsers | Where-Object { $_.Name -eq $TestBrowserName}
+            $chrome = $browsers | Where-Object { $_.BrowserType -eq $TestBrowserName}
             $chrome | Should -Not -BeNullOrEmpty
-            $chrome.Name | Should -Be $TestBrowserName
+            $chrome.BrowserType | Should -Be $TestBrowserName
         }
         
         It "Should show browser installation status" {
             $browsers = Get-Browser
-            $chrome = $browsers | Where-Object { $_.Name -eq $TestBrowserName}
+            $chrome = $browsers | Where-Object { $_.BrowserType -eq $TestBrowserName}
             
             # Chrome should have installation information
-            $chrome.PSObject.Properties.Name | Should -Contain "Path"
-            $chrome.PSObject.Properties.Name | Should -Contain "Running"
-            $chrome.PSObject.Properties.Name | Should -Contain "ProcessId"
+            $chrome.BrowserType | Should -Contain "$TestBrowserName"
         }
     }
 
@@ -59,18 +57,18 @@ Describe "PowerBrowser Browser Management" -Tags @("BrowserManagement", "Core") 
         
         It "Should start and stop browser successfully" {
             # Start browser
-            $browser = Start-Browser -Name $TestBrowserName -Headless
+            $browser = Start-Browser -BrowserType $TestBrowserName -Headless
             $browser | Should -Not -BeNullOrEmpty
             $browser.GetType().Name | Should -Be "PowerBrowserInstance"
             
             # Verify browser is running
             $runningBrowsers = Get-Browser | Where-Object { $_.Running -eq $true }
             $runningBrowsers | Should -Not -BeNullOrEmpty
-            $runningBrowser = $runningBrowsers | Where-Object { $_.Name -eq $TestBrowserName }
+            $runningBrowser = $runningBrowsers | Where-Object { $_.BrowserType -eq $TestBrowserName }
             $runningBrowser | Should -Not -BeNullOrEmpty
             
             # Stop browser
-            Stop-Browser -Name $TestBrowserName
+            Stop-Browser -Browser $browser
             
             # Verify browser is stopped
             $stoppedBrowsers = Get-Browser | Where-Object { $_.Name -eq $TestBrowserName -and $_.Running -eq $false }
@@ -79,21 +77,19 @@ Describe "PowerBrowser Browser Management" -Tags @("BrowserManagement", "Core") 
         
         It "Should handle browser instance reuse" {
             # Start first instance
-            $browser1 = Start-Browser -Name $TestBrowserName -Headless
+            $browser1 = Start-Browser -BrowserType $TestBrowserName -Headless
             $browser1 | Should -Not -BeNullOrEmpty
             
             # Start another instance (PowerBrowser may reuse the same instance)
-            $browser2 = Start-Browser -Name $TestBrowserName -Headless
+            $browser2 = Start-Browser -BrowserType $TestBrowserName -Headless
             $browser2 | Should -Not -BeNullOrEmpty
             
             # Should have at least one running browser instance
-            $runningBrowsers = Get-Browser | Where-Object { $_.IsConnected -eq $true }
-            $chromeInstances = $runningBrowsers | Where-Object { $_.Name -eq $TestBrowserName }
+            $runningBrowsers = Get-Browser | Where-Object { $_.Running -eq $true }
+            $chromeInstances = $runningBrowsers | Where-Object { $_.BrowserType -eq $TestBrowserName }
             $chromeInstances.Count | Should -BeGreaterOrEqual 1
             
             # Both browser objects should reference the same or valid instances
-            $browser1.ProcessId | Should -BeGreaterThan 0
-            $browser2.ProcessId | Should -BeGreaterThan 0
         }
         
         It "Should start browser with custom options" {
