@@ -2,6 +2,22 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "type": "PowerShell",
+            "request": "launch",
+            "name": "Debug Pester Tests in New Session",
+            "script": "${workspaceFolder}/Tests/PowerBrowser.BrowserManagement.Tests.ps1",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "createTemporaryIntegratedConsole": true
+        },
+        {
+            "name": ".NET Core Attach",
+            "type": "coreclr",
+            "request": "attach",
+            "processId": "${command:pickProcess}",
+            "justMyCode": false
+        },
+        {
             "name": "PowerShell cmdlets: pwsh",
             "type": "coreclr",
             "request": "launch",

@@ -50,9 +50,7 @@ Describe "PowerBrowser Browser Management" -Tags @("BrowserManagement", "Core") 
     Context "Browser Lifecycle Management" {
         AfterEach {
             # Cleanup any browsers started in this context
-            Get-Browser | Where-Object Running | ForEach-Object { 
-                Stop-Browser -Name $_.Name -ErrorAction SilentlyContinue 
-            }
+            Get-Browser | Where-Object Running | Stop-Browser -ErrorAction SilentlyContinue
         }
         
         It "Should start and stop browser successfully" {
@@ -94,22 +92,22 @@ Describe "PowerBrowser Browser Management" -Tags @("BrowserManagement", "Core") 
         
         It "Should start browser with custom options" {
             # Start browser with headless mode
-            $browser = Start-Browser -Name $TestBrowserName -Headless
+            $browser = Start-Browser -BrowserType $TestBrowserName -Headless
             $browser | Should -Not -BeNullOrEmpty
             
             # Browser should be running
-            $runningBrowser = Get-Browser | Where-Object { $_.Name -eq $TestBrowserName -and $_.Running -eq $true }
+            $runningBrowser = Get-Browser | Where-Object { $_.BrowserType -eq $TestBrowserName -and $_.Running -eq $true }
             $runningBrowser | Should -Not -BeNullOrEmpty
         }
     }
 
     Context "Page Management in Browser" {
         BeforeAll {
-            $script:TestBrowser = Start-Browser -Name $TestBrowserName -Headless
+            $script:TestBrowser = Start-Browser -BrowserType $TestBrowserName -Headless
         }
         
         AfterAll {
-            Stop-Browser -Name $TestBrowserName -ErrorAction SilentlyContinue
+            Stop-Browser -Browser $script:TestBrowser -ErrorAction SilentlyContinue
         }
 
         It "Should create pages with automatic naming" {
