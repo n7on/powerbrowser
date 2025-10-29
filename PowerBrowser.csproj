@@ -17,4 +17,13 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="Tests\PowerBrowser.BrowserManagement.Tests.ps1" />
+    <None Include="Tests\PowerBrowser.Exceptions.Tests.ps1" />
+    <None Include="Tests\PowerBrowser.Integration.Tests.ps1" />
+    <None Include="Tests\PowerBrowser.Navigation.Tests.ps1" />
+    <None Include="Tests\PowerBrowser.Tests.ps1" />
+    <None Include="Tests\PowerBrowser.WaitBrowserElement.Tests.ps1" />
+  </ItemGroup>
+
 </Project>
