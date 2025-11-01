@@ -24,6 +24,7 @@ namespace PowerBrowser.Services
         public BrowserService(SessionState sessionState)
         {
             _sessionStateService = new SessionStateService<PBrowser>(sessionState, RunningBrowsersKey);
+            AppDomain.CurrentDomain.ProcessExit += (s, e) => Cleanup();
         }
 
         private string GetBrowserTypeInstallPath(SupportedPBrowser supportedBrowser)
@@ -175,6 +176,9 @@ namespace PowerBrowser.Services
 
             return pbrowser;
         }
-
+        public void Cleanup()
+        {
+            GetBrowsers().Where(b => b.Running).ToList().ForEach(b => StopBrowser(b));
+        }
     }
 }
