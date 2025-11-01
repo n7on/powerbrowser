@@ -24,7 +24,6 @@
             "preLaunchTask": "build",
             "program": "pwsh",
             "args": [
-                "-NoExit",
                 "-NoProfile",
                 "-Command",
                 "${workspaceFolder}/Tests/PowerBrowser.BrowserManagement.Tests.ps1",

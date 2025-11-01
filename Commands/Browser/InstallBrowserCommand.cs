@@ -1,37 +1,37 @@
 using System;
 using System.IO;
 using System.Management.Automation;
-using PuppeteerSharp;
-using PowerBrowser.Models;
-using PowerBrowser.Helpers;
+using PowerBrowser.Transport;
+using PowerBrowser.Services;
+using PowerBrowser.Common;
 
-namespace PowerBrowser.Cmdlets.Browser
+namespace PowerBrowser.Commands.Browser
 {
     [Cmdlet(VerbsLifecycle.Install, "Browser")]
-    [OutputType(typeof(PowerBrowserInstance))]
+    [OutputType(typeof(PBrowser))]
     public class InstallBrowserCommand : PSCmdlet
     {
         [Parameter(
             Position = 0,
             HelpMessage = "Browser type to install (Chrome, Firefox, or Chromium - use -Headless flag with Start-Browser instead of ChromeHeadlessShell)")]
-        public SupportedBrowser BrowserType { get; set; } = SupportedBrowser.Chrome;
+        public SupportedPBrowser BrowserType { get; set; }
 
         protected override void ProcessRecord()
         {
             try
             {
-                var browserName = BrowserType.ToString();
-                var path = BrowserHelper.GetBrowserInstancePath(BrowserType);
+                var browserService = ServiceFactory.CreateBrowserService(SessionState);
+
                 
                 // Check if browser is already installed
-                if (!Directory.Exists(path))
+                if (!browserService.IsBrowserTypeInstalled(BrowserType))
                 {
                     WriteVerbose($"Downloading {BrowserType}... This may take a few minutes depending on your connection.");
-                    BrowserHelper.DownloadBrowser(BrowserType);
+                    browserService.DownloadBrowser(BrowserType);
                 }
                 else
                 {
-                    WriteVerbose($"{BrowserType} is already installed at {path}.");
+                    WriteVerbose($"{BrowserType} is already installed.");
                 }
                 
             }

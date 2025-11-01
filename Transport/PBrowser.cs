@@ -2,47 +2,45 @@ using System;
 using System.Collections.Generic;
 using PuppeteerSharp;
 using System.Management.Automation;
+using PowerBrowser.Common;
 
-namespace PowerBrowser.Models
+namespace PowerBrowser.Transport
 {
     /// <summary>
     /// PowerShell-friendly wrapper for IBrowser with additional metadata
     /// </summary>
-    public class PowerBrowserInstance
+    public class PBrowser
     {
     
         [Hidden]
         public IBrowser Browser { get; set; }
-        public string BrowserType { get; set; }
+        public SupportedPBrowser BrowserType { get; set; }
         public DateTime StartTime { get; set; }
         public bool Headless { get; set; }
         public string WindowSize { get; set; }
-        public List<PowerBrowserPage> Pages { get; set; }
-        
+
         // Additional properties for Get-Browser display
         public string Size { get; set; }
         public string Path { get; set; }
 
-        public PowerBrowserInstance(IBrowser browser, bool headless, string windowSize, string path)
+        public PBrowser(IBrowser browser, bool headless, string windowSize, string path)
         {
             Browser = browser;
-            BrowserType = browser?.BrowserType.ToString() ?? "Unknown";
+            BrowserType = browser?.BrowserType.ToSupportedPBrowser() ?? SupportedPBrowser.Chrome;   
             StartTime = DateTime.Now;
             Headless = headless;
             WindowSize = windowSize;
-            Pages = new List<PowerBrowserPage>();
             Path = path;
         }
 
-        public PowerBrowserInstance(string path, IBrowser browser)
+        public PBrowser(SupportedPBrowser browserType, string path)
         {
-            Browser = browser;
-            BrowserType = System.IO.Path.GetFileName(path);
-            StartTime = DateTime.Now;
+            Browser = null;
+            BrowserType = browserType;
+            StartTime = DateTime.MinValue;
             Headless = false;
             WindowSize = "Unknown"; // Default size
             Path = path;
-            Pages = new List<PowerBrowserPage>();
             Size = "Unknown"; // Default size
         }
 
@@ -50,7 +48,7 @@ namespace PowerBrowser.Models
         public int ProcessId => Browser?.Process?.Id ?? -1;
         public string WebSocketEndpoint => Browser?.WebSocketEndpoint ?? "Unknown";
         public bool Running => Browser?.IsConnected ?? false;  // User-friendly alias
-        public int PageCount => Pages.Count;
+        public int PageCount => Browser?.PagesAsync().GetAwaiter().GetResult().Length ?? 0;
 
         public override string ToString()
         {

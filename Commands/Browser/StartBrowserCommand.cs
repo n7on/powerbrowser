@@ -1,30 +1,22 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Management.Automation;
-using System.Threading.Tasks;
-using PuppeteerSharp;
-using PowerBrowser.Models;
-using PowerBrowser.Helpers;
+using PowerBrowser.Transport;
+using PowerBrowser.Services;
 using PowerBrowser.Completers;
-using System.Collections;
-using System.Management.Automation.Language;
+using PowerBrowser.Common;
 
-namespace PowerBrowser.Cmdlets.Browser
+namespace PowerBrowser.Commands.Browser
 {
     [Cmdlet(VerbsLifecycle.Start, "Browser")]
-    [OutputType(typeof(PowerBrowserInstance))]
+    [OutputType(typeof(PBrowser))]
     public class StartBrowserCommand : PSCmdlet
     {
         [Parameter(
             Position = 0,
-            Mandatory = true,
-            ValueFromPipeline = true,
-            HelpMessage = "Name of the browser to start")]
+            HelpMessage = "Name of the browser to stop (used when Browser parameter is not provided)",
+            Mandatory = true)]
         [ArgumentCompleter(typeof(InstalledBrowserCompleter))]
         public string BrowserType { get; set; }
-
         [Parameter(HelpMessage = "Run browser in headless mode (no GUI)")]
         public SwitchParameter Headless { get; set; }
 
@@ -37,20 +29,19 @@ namespace PowerBrowser.Cmdlets.Browser
         [Parameter(HelpMessage = "Window height (default: 720)")]
         public int Height { get; set; } = 720;
 
-
-
         protected override void ProcessRecord()
         {
             try
             {
-                var powerBrowserInstance = BrowserHelper.StartBrowser(
-                    BrowserHelper.ParseBrowserType(BrowserType),
+                BrowserTypeValidator.Validate(BrowserType);
+                var browserService = ServiceFactory.CreateBrowserService(SessionState);
+                var browser = browserService.StartBrowser(
+                    BrowserType.ToSupportedPBrowser(),
                     Headless.IsPresent,
                     Width,
-                    Height,
-                    SessionState
+                    Height
                 );
-                WriteObject(powerBrowserInstance);
+                WriteObject(browser);
             }
             catch (PipelineStoppedException)
             {

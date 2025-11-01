@@ -2,12 +2,12 @@ using System;
 using System.Collections.Generic;
 using PuppeteerSharp;
 
-namespace PowerBrowser.Models
+namespace PowerBrowser.Transport
 {
     /// <summary>
     /// PowerShell-friendly wrapper for IElementHandle with additional metadata
     /// </summary>
-    public class PowerBrowserElement
+    public class PBrowserElement
     {
         public string ElementId { get; set; }
         public string PageName { get; set; }
@@ -17,11 +17,7 @@ namespace PowerBrowser.Models
         public int Index { get; set; }
         public DateTime FoundTime { get; set; }
 
-        // Added a static property and method to manage and retrieve all PowerBrowserElement instances.
-        private static readonly Dictionary<string, PowerBrowserElement> _elements = new Dictionary<string, PowerBrowserElement>();
-        public static Dictionary<string, PowerBrowserElement> GetAllElements() => _elements;
-
-        public PowerBrowserElement(string elementId, string pageName, IElementHandle element, string selector, int index, IPage page = null)
+        public PBrowserElement(string elementId, string pageName, IElementHandle element, string selector, int index, IPage page = null)
         {
             ElementId = elementId;
             PageName = pageName;
@@ -30,9 +26,6 @@ namespace PowerBrowser.Models
             Index = index;
             FoundTime = DateTime.Now;
             Page = page;
-
-            // Add instance to the static dictionary
-            _elements[elementId] = this;
         }
 
         // Properties for PowerShell display

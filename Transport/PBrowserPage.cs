@@ -1,26 +1,27 @@
 using System;
 using System.Collections.Generic;
+using System.Management.Automation;
 using PuppeteerSharp;
 
-namespace PowerBrowser.Models
+namespace PowerBrowser.Transport
 {
     /// <summary>
     /// PowerShell-friendly wrapper for IPage with additional metadata
     /// </summary>
-    public class PowerBrowserPage
+    public class PBrowserPage
     {
-        public string PageId { get; set; }
+        public string PageId => $"{Browser.BrowserType}_{PageName}";
         public string PageName { get; set; }
-        public PowerBrowserInstance Browser { get; set; }
+        public PBrowser Browser { get; set; }
+        [Hidden]
         public IPage Page { get; set; }
         public DateTime CreatedTime { get; set; }
         public int ViewportWidth { get; set; }
         public int ViewportHeight { get; set; }
 
 
-        public PowerBrowserPage(string pageId, string pageName, PowerBrowserInstance browser, IPage page, int width, int height)
+        public PBrowserPage(PBrowser browser, IPage page, string pageName, int width, int height)
         {
-            PageId = pageId;
             PageName = pageName;
             Browser = browser;
             Page = page;
@@ -30,7 +31,6 @@ namespace PowerBrowser.Models
         }
 
         // Properties for PowerShell display
-        public string BrowserType => Browser?.BrowserType ?? "Unknown";
         public string ViewportSize => $"{ViewportWidth}x{ViewportHeight}";
         public bool IsClosed => Page?.IsClosed ?? true;
 

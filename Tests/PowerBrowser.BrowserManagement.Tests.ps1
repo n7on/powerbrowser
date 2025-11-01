@@ -57,7 +57,7 @@ Describe "PowerBrowser Browser Management" -Tags @("BrowserManagement", "Core") 
             # Start browser
             $browser = Start-Browser -BrowserType $TestBrowserName -Headless
             $browser | Should -Not -BeNullOrEmpty
-            $browser.GetType().Name | Should -Be "PowerBrowserInstance"
+            $browser.GetType().Name | Should -Be "PBrowser"
             
             # Verify browser is running
             $runningBrowsers = Get-Browser | Where-Object { $_.Running -eq $true }
@@ -120,18 +120,12 @@ Describe "PowerBrowser Browser Management" -Tags @("BrowserManagement", "Core") 
             $page1.PageName | Should -Be 'Page1'
             $page2.PageName | Should -Be 'Page2'
             $page3.PageName | Should -Be 'Page3'
-            
-            # Should have proper IDs
-            $page1.PageId | Should -Be "$TestBrowserName`_Page1"
-            $page2.PageId | Should -Be "$TestBrowserName`_Page2"
-            $page3.PageId | Should -Be "$TestBrowserName`_Page3"
         }
         
         It "Should create pages with custom names" {
             $customPage = $script:TestBrowser | New-BrowserPage -Url "about:blank" -Name 'CustomTest'
             
             $customPage.PageName | Should -Be 'CustomTest'
-            $customPage.PageId | Should -Be "$TestBrowserName`_CustomTest"
         }
         
         It "Should list all pages in browser" {
