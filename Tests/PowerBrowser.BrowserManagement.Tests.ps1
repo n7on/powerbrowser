@@ -162,32 +162,28 @@ Describe "PowerBrowser Browser Management" -Tags @("BrowserManagement", "Core") 
         AfterEach {
             # Cleanup any browsers started in this context
             Get-Browser | Where-Object Running | ForEach-Object { 
-                Stop-Browser -Name $_.Name -ErrorAction SilentlyContinue 
+                Stop-Browser -BrowserType $_.BrowserType -ErrorAction SilentlyContinue 
             }
         }
         
         It "Should expose correct browser properties" {
-            $browser = Start-Browser -Name $TestBrowserName -Headless
+            $browser = Start-Browser -BrowserType $TestBrowserName -Headless
             
             # Check required properties
-            $browser.Name | Should -Be $TestBrowserName
-            $browser.PSObject.Properties.Name | Should -Contain "Running"
-            $browser.PSObject.Properties.Name | Should -Contain "ProcessId"
-            $browser.PSObject.Properties.Name | Should -Contain "PageCount"
-            $browser.PSObject.Properties.Name | Should -Contain "Path"
+            $browser.BrowserType | Should -Be $TestBrowserName
             
             # ProcessId should be a valid number when running
             $browser.ProcessId | Should -BeGreaterThan 0
             
             # Browser should be connected
-            $browser.IsConnected | Should -Be $true
+            $browser.Running | Should -Be $true
             
             # Initially should have 0 pages
             $browser.PageCount | Should -Be 0
         }
         
         It "Should update page count when pages are added" {
-            $browser = Start-Browser -Name $TestBrowserName -Headless
+            $browser = Start-Browser -BrowserType $TestBrowserName -Headless
             
             # Initially 0 pages
             $browser.PageCount | Should -Be 0

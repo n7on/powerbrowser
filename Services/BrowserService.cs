@@ -159,6 +159,11 @@ namespace PowerBrowser.Services
 
             var browser = Puppeteer.LaunchAsync(launchOptions).GetAwaiter().GetResult();
 
+            //default page close
+            var defaultPage = browser.PagesAsync().GetAwaiter().GetResult().FirstOrDefault();
+            if (defaultPage != null && defaultPage.Url == "about:blank")
+                defaultPage.CloseAsync().GetAwaiter().GetResult();
+
             var pbrowser = new PBrowser(
                 browser,
                 headless,
